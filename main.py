@@ -8,29 +8,17 @@ from telethon.tl.functions.messages import GetHistoryRequest
 
 
 async def dump_all_messages(channel):
-    """Записывает json-файл с информацией о всех сообщениях канала/чата"""
-    offset_msg = 0  # номер записи, с которой начинается считывание
-    limit_msg = 200  # максимальное число записей, передаваемых за один раз
     while True:
         try:
-            history = await client(GetHistoryRequest(
-                peer=channel,
-                offset_id=offset_msg,
-                offset_date=None, add_offset=0,
-                limit=limit_msg, max_id=0, min_id=0,
-                hash=0))
-            if not history.messages:
-                break
-            all_messages = [message.to_dict() for message in history.messages]
-            for message in all_messages:
-                nums = re.findall(r'\d+', message['message'])
+            async for message in client.iter_messages(channel):
+                nums = re.findall(r'\d+', message.message)
                 nums = [int(i) for i in nums if 3000000 <= int(i) <= 35000000]
                 if not nums:
                     continue
-                user = await client.get_entity(message['from_id']['user_id'])
+                user = await client.get_entity(message.from_id.user_id)
                 with open(f'{channel.username}.csv', 'a+', encoding='utf-8') as file:
                     for vendor in nums:
-                        data = [message['date'].strftime('%d-%m-%Y'), vendor, user.id,
+                        data = [message.date.strftime('%d-%m-%Y'), vendor, user.id,
                                 f'@{user.username}' if user.username else user.first_name,
                                 user.phone if user.phone else '--']
                         writer = csv.writer(file, delimiter=';')
@@ -57,3 +45,10 @@ if __name__ == '__main__':
     client.start()
     with client:
         client.loop.run_until_complete(main())
+        user = client.get_entity('@grekov')
+        client.send_file(client.get_entity('@grekov'), open('wbofficialchat.csv', 'rb'),
+                         caption='Это сообщение создано автоматически!\nПолучен файл!')
+        client.send_file(client.get_entity('@grekov'), open('wbofficialSKLAD.csv', 'rb'),
+                         caption='Это сообщение создано автоматически!\nПолучен файл!')
+        # client.send_message(user, 'Это сообщение создано автоматически, чтобы предупредить, что выгрузка закончилась.\n'
+        #                           '')
