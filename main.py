@@ -2,9 +2,7 @@ import asyncio
 import configparser
 import csv
 import re
-
 from telethon.sync import TelegramClient
-from telethon.tl.functions.messages import GetHistoryRequest
 
 
 async def dump_all_messages(channel):
@@ -19,11 +17,13 @@ async def dump_all_messages(channel):
                 with open(f'{channel.username}.csv', 'a+', encoding='utf-8') as file:
                     for vendor in nums:
                         data = [message.date.strftime('%d-%m-%Y'), vendor, user.id,
-                                f'@{user.username}' if user.username else user.first_name,
+                                f'@{user.username}' if user.username else "--",
+                                f'{user.first_name}' if user.first_name else '--',
                                 user.phone if user.phone else '--']
                         writer = csv.writer(file, delimiter=';')
                         writer.writerow(data)
         except Exception as exc:
+            print(exc)
             continue
 
 
@@ -46,9 +46,7 @@ if __name__ == '__main__':
     with client:
         client.loop.run_until_complete(main())
         user = client.get_entity('@grekov')
-        client.send_file(client.get_entity('@grekov'), open('wbofficialchat.csv', 'rb'),
+        client.send_file(user, open('wbofficialchat.csv', 'rb'),
                          caption='Это сообщение создано автоматически!\nПолучен файл!')
-        client.send_file(client.get_entity('@grekov'), open('wbofficialSKLAD.csv', 'rb'),
+        client.send_file(user, open('wbofficialSKLAD.csv', 'rb'),
                          caption='Это сообщение создано автоматически!\nПолучен файл!')
-        # client.send_message(user, 'Это сообщение создано автоматически, чтобы предупредить, что выгрузка закончилась.\n'
-        #                           '')
