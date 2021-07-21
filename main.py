@@ -6,33 +6,29 @@ from telethon.sync import TelegramClient
 
 
 async def dump_all_messages(channel):
-    while True:
+    async for message in client.iter_messages(channel):
         try:
-            async for message in client.iter_messages(channel):
-                nums = re.findall(r'\d+', message.message)
-                nums = [int(i) for i in nums if 3000000 <= int(i) <= 35000000]
-                if not nums:
-                    continue
-                user = await client.get_entity(message.from_id.user_id)
-                with open(f'{channel.username}.csv', 'a+', encoding='utf-8') as file:
-                    for vendor in nums:
-                        data = [message.date.strftime('%d-%m-%Y'), vendor, user.id,
-                                f'@{user.username}' if user.username else "--",
-                                f'{user.first_name}' if user.first_name else '--',
-                                user.phone if user.phone else '--']
-                        writer = csv.writer(file, delimiter=';')
-                        writer.writerow(data)
+            nums = re.findall(r'\d+', message.message)
+            nums = [int(i) for i in nums if 3000000 <= int(i) <= 35000000]
+            if not nums:
+                continue
+            user = await client.get_entity(message.from_id.user_id)
+            with open(f'{channel.username}.csv', 'a+', encoding='utf-8') as file:
+                for vendor in nums:
+                    data = [message.date.strftime('%d-%m-%Y'), vendor, user.id,
+                            f'@{user.username}' if user.username else "--",
+                            f'{user.first_name}' if user.first_name else '--',
+                            user.phone if user.phone else '--']
+                    writer = csv.writer(file, delimiter=';')
+                    writer.writerow(data)
         except Exception as exc:
             print(exc)
-            continue
 
 
 async def main():
-    # for chat in ['@wbofficialchat', '@wbofficialSKLAD']:
-    #     channel = await client.get_entity(chat)
-    await asyncio.gather(dump_all_messages(await client.get_entity('@wbofficialchat')),
-                         dump_all_messages(await client.get_entity('@wbofficialSKLAD')))
-    # await dump_all_messages(channel)
+    for chat in ['@wbofficialchat']:
+        channel = await client.get_entity(chat)
+        await dump_all_messages(channel)
 
 
 if __name__ == '__main__':
@@ -47,6 +43,4 @@ if __name__ == '__main__':
         client.loop.run_until_complete(main())
         user = client.get_entity('@grekov')
         client.send_file(user, open('wbofficialchat.csv', 'rb'),
-                         caption='Это сообщение создано автоматически!\nПолучен файл!')
-        client.send_file(user, open('wbofficialSKLAD.csv', 'rb'),
                          caption='Это сообщение создано автоматически!\nПолучен файл!')
