@@ -6,7 +6,7 @@ from telethon.sync import TelegramClient
 
 
 async def dump_all_messages(channel):
-    async for message in client.iter_messages(channel):
+    async for message in client.iter_messages(channel, reverse=True):
         try:
             nums = re.findall(r'\d+', message.message)
             nums = [int(i) for i in nums if 3000000 <= int(i) <= 35000000]
@@ -26,9 +26,12 @@ async def dump_all_messages(channel):
 
 
 async def main():
-    for chat in ['@wbofficialchat']:
-        channel = await client.get_entity(chat)
-        await dump_all_messages(channel)
+    # for chat in ['@wbofficialSKLAD']:
+        # channel = await client.get_entity(chat)
+    await asyncio.gather(dump_all_messages(await client.get_entity('@wbofficialchat')),
+                         dump_all_messages(await client.get_entity('@wbofficialSKLAD')))
+
+        # await dump_all_messages(channel)
 
 
 if __name__ == '__main__':
@@ -43,4 +46,6 @@ if __name__ == '__main__':
         client.loop.run_until_complete(main())
         user = client.get_entity('@grekov')
         client.send_file(user, open('wbofficialchat.csv', 'rb'),
+                         caption='Это сообщение создано автоматически!\nПолучен файл!')
+        client.send_file(user, open('wbofficialSKLAD.csv', 'rb'),
                          caption='Это сообщение создано автоматически!\nПолучен файл!')
